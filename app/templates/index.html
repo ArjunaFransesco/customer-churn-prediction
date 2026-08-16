@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChurnShield ML - Customer Churn Predictor</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --primary: #0d9488; /* Teal 600 */
+            --primary-hover: #0f766e; /* Teal 700 */
+            --primary-light: #ccfbf1; /* Teal 100 */
+            --border-color: #e2e8f0;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --success: #16a34a; /* Green 600 */
+            --warning: #ea580c; /* Orange 600 */
+            --danger: #e11d48;  /* Rose 600 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        header h1 span {
+            color: var(--primary);
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 968px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .form-tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 640px) {
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+            background-color: #fff;
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        }
+
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 1.5rem;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* Results Card */
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 400px;
+        }
+
+        .awaiting-input {
+            color: var(--text-secondary);
+        }
+
+        .awaiting-input svg {
+            width: 64px;
+            height: 64px;
+            color: var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        .result-content {
+            width: 100%;
+            display: none;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .gauge-circle {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .gauge-background {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 12;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 502.4;
+            stroke-dashoffset: 502.4;
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .gauge-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+        }
+
+        .badge-low {
+            background-color: #dcfce7;
+            color: var(--success);
+        }
+
+        .badge-medium {
+            background-color: #ffedd5;
+            color: var(--warning);
+        }
+
+        .badge-high {
+            background-color: #ffe4e6;
+            color: var(--danger);
+        }
+
+        .recommendations-box {
+            text-align: left;
+            background-color: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            width: 100%;
+        }
+
+        .recommendations-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .recommendations-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .recommendations-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .recommendations-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .loading-spinner {
+            display: none;
+            border: 4px solid rgba(0,0,0,0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🛡️ Churn<span>Shield</span> ML</h1>
+            <p>Customer Retention & Predictive Churn Risk Analytics</p>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Form Card -->
+            <div class="card">
+                <div class="form-tabs">
+                    <button class="tab-btn active" onclick="switchTab(event, 'demographics')">1. Demographics</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'services')">2. Services</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'billing')">3. Contract & Billing</button>
+                </div>
+
+                <form id="churnForm">
+                    <!-- Tab 1: Demographics -->
+                    <div id="demographics" class="tab-content active">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="gender">Gender</label>
+                                <select id="gender" name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="SeniorCitizen">Senior Citizen</label>
+                                <select id="SeniorCitizen" name="SeniorCitizen">
+                                    <option value="0">No (Under 65)</option>
+                                    <option value="1">Yes (65 or older)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="Partner">Partner</label>
+                                <select id="Partner" name="Partner">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="Dependents">Dependents</label>
+                                <select id="Dependents" name="Dependents">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-submit" onclick="nextTab('services')">Continue to Services</button>
+                    </div>
+
+                    <!-- Tab 2: Services -->
+                    <div id="services" class="tab-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="PhoneService">Phone Service</label>
+                                <select id="PhoneService" name="PhoneService">
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="MultipleLines">Multiple Lines</label>
+                                <select id="MultipleLines" name="MultipleLines">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No phone service">No Phone Service</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="InternetService">Internet Service</label>
+                                <select id="InternetService" name="InternetService">
+                                    <option value="Fiber optic">Fiber Optic</option>
+                                    <option value="DSL">DSL</option>
+                                    <option value="No">None</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="OnlineSecurity">Online Security</label>
+                                <select id="OnlineSecurity" name="OnlineSecurity">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">No Internet Service</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="OnlineBackup">Online Backup</label>
+                                <select id="OnlineBackup" name="OnlineBackup">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">No Internet Service</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="DeviceProtection">Device Protection</label>
+                                <select id="DeviceProtection" name="DeviceProtection">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">No Internet Service</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="TechSupport">Tech Support</label>
+                                <select id="TechSupport" name="TechSupport">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">No Internet Service</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="StreamingTV">Streaming TV</label>
+                                <select id="StreamingTV" name="StreamingTV">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">No Internet Service</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="StreamingMovies">Streaming Movies</label>
+                                <select id="StreamingMovies" name="StreamingMovies">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">No Internet Service</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-submit" onclick="nextTab('billing')">Continue to Billing</button>
+                    </div>
+
+                    <!-- Tab 3: Contract & Billing -->
+                    <div id="billing" class="tab-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="tenure">Tenure (Months)</label>
+                                <input type="number" id="tenure" name="tenure" min="0" max="100" value="12" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="Contract">Contract Type</label>
+                                <select id="Contract" name="Contract">
+                                    <option value="Month-to-month">Month-to-Month</option>
+                                    <option value="One year">One Year</option>
+                                    <option value="Two year">Two Years</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="PaperlessBilling">Paperless Billing</label>
+                                <select id="PaperlessBilling" name="PaperlessBilling">
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="PaymentMethod">Payment Method</label>
+                                <select id="PaymentMethod" name="PaymentMethod">
+                                    <option value="Electronic check">Electronic Check</option>
+                                    <option value="Mailed check">Mailed Check</option>
+                                    <option value="Bank transfer (automatic)">Bank Transfer (Automatic)</option>
+                                    <option value="Credit card (automatic)">Credit Card (Automatic)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="MonthlyCharges">Monthly Charges ($)</label>
+                                <input type="number" id="MonthlyCharges" name="MonthlyCharges" min="0" max="200" step="0.01" value="65.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="TotalCharges">Total Charges ($)</label>
+                                <input type="number" id="TotalCharges" name="TotalCharges" min="0" max="10000" step="0.01" value="780.00" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit">Analyze Churn Risk</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Card -->
+            <div class="card results-panel" id="resultsPanel">
+                <!-- Loading State -->
+                <div class="loading-spinner" id="loadingSpinner"></div>
+
+                <!-- Awaiting input state -->
+                <div class="awaiting-input" id="awaitingInput">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h3>Ready for Risk Analysis</h3>
+                    <p>Enter the customer's profile on the left and submit to evaluate retention statistics.</p>
+                </div>
+
+                <!-- Result Content -->
+                <div class="result-content" id="resultContent">
+                    <div class="gauge-container">
+                        <svg class="gauge-circle" viewBox="0 0 180 180">
+                            <circle class="gauge-background" cx="90" cy="90" r="80"></circle>
+                            <circle class="gauge-fill" id="gaugeFill" cx="90" cy="90" r="80"></circle>
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="gauge-value" id="riskPercent">0%</div>
+                            <div class="gauge-label">Churn Prob.</div>
+                        </div>
+                    </div>
+
+                    <div id="riskBadge" class="badge">Low Risk</div>
+
+                    <div class="recommendations-box">
+                        <div class="recommendations-title">💡 Strategic Interventions:</div>
+                        <ul class="recommendations-list" id="recommendationsList">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(evt, tabId) {
+            const tabContents = document.querySelectorAll(".tab-content");
+            tabContents.forEach(content => content.classList.remove("active"));
+            
+            const tabButtons = document.querySelectorAll(".tab-btn");
+            tabButtons.forEach(btn => btn.classList.remove("active"));
+            
+            document.getElementById(tabId).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        function nextTab(tabId) {
+            const tabs = document.querySelectorAll(".tab-btn");
+            let targetTab;
+            
+            if (tabId === 'services') targetTab = tabs[1];
+            if (tabId === 'billing') targetTab = tabs[2];
+            
+            if (targetTab) {
+                targetTab.click();
+            }
+        }
+
+        document.getElementById("churnForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const form = document.getElementById("churnForm");
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Show loading state
+            document.getElementById("awaitingInput").style.display = "none";
+            document.getElementById("resultContent").style.display = "none";
+            document.getElementById("loadingSpinner").style.display = "block";
+            
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === "success") {
+                    const prob = result.churn_probability;
+                    const percent = Math.round(prob * 100);
+                    
+                    // Update gauge fill
+                    const fill = document.getElementById("gaugeFill");
+                    const radius = 80;
+                    const circumference = 2 * Math.PI * radius;
+                    const offset = circumference - (prob * circumference);
+                    fill.style.strokeDashoffset = offset;
+                    
+                    // Set color based on risk
+                    if (result.risk_level === 'High') {
+                        fill.style.stroke = 'var(--danger)';
+                    } else if (result.risk_level === 'Medium') {
+                        fill.style.stroke = 'var(--warning)';
+                    } else {
+                        fill.style.stroke = 'var(--success)';
+                    }
+                    
+                    // Update text values
+                    document.getElementById("riskPercent").innerText = percent + "%";
+                    
+                    const badge = document.getElementById("riskBadge");
+                    badge.innerText = result.risk_level + " Risk";
+                    badge.className = "badge badge-" + result.risk_level.toLowerCase();
+                    
+                    // Populate recommendations
+                    const recList = document.getElementById("recommendationsList");
+                    recList.innerHTML = "";
+                    result.recommendations.forEach(rec => {
+                        const li = document.createElement("li");
+                        li.innerText = rec;
+                        recList.appendChild(li);
+                    });
+                    
+                    // Hide spinner, show content
+                    document.getElementById("loadingSpinner").style.display = "none";
+                    document.getElementById("resultContent").style.display = "block";
+                } else {
+                    alert("Error: " + result.message);
+                    resetResults();
+                }
+            } catch (err) {
+                alert("Error calling prediction server: " + err.message);
+                resetResults();
+            }
+        });
+
+        function resetResults() {
+            document.getElementById("loadingSpinner").style.display = "none";
+            document.getElementById("awaitingInput").style.display = "block";
+            document.getElementById("resultContent").style.display = "none";
+        }
+    </script>
+</body>
+</html>
