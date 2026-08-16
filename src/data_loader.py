@@ -22,7 +22,7 @@ def load_data(file_path: str) -> pd.DataFrame:
     return pd.read_csv(file_path)
 
 if __name__ == "__main__":
-    DATA_URL = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Customer-Churn.csv"
+    DATA_URL = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
     OUTPUT_FILE = os.path.join("data", "raw", "customer_churn.csv")
     download_data(DATA_URL, OUTPUT_FILE)
     df = load_data(OUTPUT_FILE)

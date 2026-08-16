@@ -98,7 +98,7 @@ def evaluate_model(model, X_test, y_test, model_name="Model"):
     return roc_auc
 
 def main():
-    DATA_URL = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Customer-Churn.csv"
+    DATA_URL = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
     RAW_PATH = os.path.join("data", "raw", "customer_churn.csv")
     
     # Download data if not exists
